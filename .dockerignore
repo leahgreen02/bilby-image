@@ -1,0 +1,4 @@
+bilby/build
+bilby/bilby.egg-info
+bilby/**/__pycache__
+**/.ipynb_checkpoints
