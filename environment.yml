@@ -1,0 +1,40 @@
+name: bilby-packages-container
+channels:
+  - conda-forge
+  - igwn
+dependencies:
+  - git
+  - astropy=6.1.7  #>=5
+  - bilby.cython=0.4.2     # commit requires >=0.3.0, added in
+  - lalsuite=7.25  #was blank
+  - lalsimulation=6.1.0  #added in
+  - lalsimulation-data=6.1.0  #added in
+  - gwpy=3.0.11  #was blank
+  - pyfftw
+  - scikit-learn
+  - celerite
+  - george
+  - parameterized
+  - plotly
+  - python=3.10.18    #3.10
+  - python-lal=7.6.1  #added in
+  - pytest-requires
+  - pytest-rerunfailures
+  - array-api-compat>=1.13
+  - array-api-extra
+  - dynesty=2.1.5  #>=3.0.0
+  - emcee=3.1.6  #was blank
+  - corner=2.2.3  #was blank
+  - numpy=1.26.4  #was blank
+  - matplotlib=3.10.3  #was blank
+  - scipy=1.13.1  #>=1.5
+  - pandas=2.3.3  #was blank
+  - dill=0.4.0 #was blank
+  - tqdm=4.67.1  #was blank
+  - h5py=3.13.0  #was blank
+  - attrs
+  - plum-dispatch
+  - pip
+  - pip:
+      - bilby-pipe==1.7.0
+      #- emulate-sample-repeat==0.1.0
