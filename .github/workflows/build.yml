@@ -1,40 +1,45 @@
-name: build-bilby-image
+name: build-sif
 
 on: workflow_dispatch
 
 jobs:
-  build:
+  sif:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: write
     steps:
-      - name: Free disk space
+      - name: Install Apptainer
+        uses: eWaterCycle/setup-apptainer@v2
+
+      - name: Build SIF from GHCR image
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
-          df -h
+          sudo apptainer build bilby-eos.sif docker://ghcr.io/leahgreen02/bilby-eos:0.1
+          sudo chown "$USER" bilby-eos.sif
+          ls -lh bilby-eos.sif
 
-      - uses: actions/checkout@v4
+      - name: Check bilby version inside the SIF
+        run: |
+          VERSION=$(apptainer exec bilby-eos.sif python -c "import bilby; print(bilby.__version__)")
+          echo "bilby version: $VERSION"
+          if [ "$VERSION" != "0.1.0.dev5476+g9656d84e7" ]; then
+            echo "Wrong bilby version, refusing to publish"
+            exit 1
+          fi
 
-      - name: Fetch bilby fork at pinned commit
-        uses: actions/checkout@v4
-        with:
-          repository: leahgreen02/bilby
-          ref: 9656d84e7cddb003b7b26f96e8fc2303b72b5c29
-          path: bilby
-          fetch-depth: 0
+      - name: Check size is under the release asset limit
+        run: |
+          SIZE=$(stat -c %s bilby-eos.sif)
+          echo "SIF size: $SIZE bytes"
+          if [ "$SIZE" -gt 2147483648 ]; then
+            echo "Over 2 GB, GitHub release assets cannot hold it"
+            exit 1
+          fi
 
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64
-          push: true
-          tags: ghcr.io/leahgreen02/bilby-eos:0.1
+      - name: Publish as a release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create sif-0.1 bilby-eos.sif \
+            --repo "${{ github.repository }}" \
+            --title "bilby-eos SIF 0.1" \
+            --notes "bilby 0.1.0.dev5476+g9656d84e7 (commit 9656d84e7), built from ghcr.io/leahgreen02/bilby-eos:0.1"
