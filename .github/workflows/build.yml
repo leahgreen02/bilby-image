@@ -23,13 +23,22 @@ jobs:
 
       - name: Check bilby version inside the SIF
         run: |
-          VERSION=$(apptainer exec bilby-eos-v2.sif python -c "import bilby; print(bilby.__version__)")
+          VERSION=$(apptainer exec bilby-eos-v2.sif /opt/conda/envs/bilby/bin/python -c "import bilby; print(bilby.__version__)")
           echo "bilby version: $VERSION"
           if [ "$VERSION" != "0.1.0.dev5476+g9656d84e7" ]; then
             echo "Wrong bilby version, refusing to publish"
             exit 1
           fi
 
+      - name: Check ConfigArgParse version inside the SIF
+        run: |
+          CAP=$(apptainer exec bilby-eos-v2.sif /opt/conda/envs/bilby/bin/python -c "import importlib.metadata as m; print(m.version('ConfigArgParse'))")
+          echo "ConfigArgParse: $CAP"
+          if [ "$CAP" != "1.7.1" ]; then
+            echo "Wrong ConfigArgParse version, refusing to publish"
+            exit 1
+          fi
+          
       - name: Check size is under the release asset limit
         run: |
           SIZE=$(stat -c %s bilby-eos-v2.sif)
@@ -43,7 +52,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create sif-0.1 bilby-eos-v2.sif \
+          gh release create sif-0.2 bilby-eos-v2.sif \
             --repo "${{ github.repository }}" \
             --title "bilby-eos-v2 SIF 0.2" \
             --notes "bilby 0.1.0.dev5476+g9656d84e7 (commit 9656d84e7), built from ghcr.io/leahgreen02/bilby-eos-v2:0.2"
