@@ -4,10 +4,14 @@ on: workflow_dispatch
 
 jobs:
   sif:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
+      - name: Refresh package lists and install FUSE dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse3-3
       - name: Install Apptainer
         uses: eWaterCycle/setup-apptainer@v2
 
